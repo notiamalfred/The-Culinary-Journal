@@ -1,4 +1,4 @@
-# The Journal — Community Recipes
+# The Culinary Journal
 
 Your original recipe/travel-log site, plus a real backend: users can create an
 account, log in, and share recipes that everyone visiting the site can see in
