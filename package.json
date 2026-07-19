@@ -1,0 +1,13 @@
+{
+  "name": "the-journal",
+  "version": "1.0.0",
+  "description": "Recipes & Travel Log with community recipe sharing",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {}
+}
