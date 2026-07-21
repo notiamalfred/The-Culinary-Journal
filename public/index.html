@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE JOURNAL | Recipes & Travel Log</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #FDFCF9;
+            --accent: #6B705C; /* Sage */
+            --stone-300: #D6D3D1;
+            --text-main: #1C1917;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-main); }
+        h1, h2, h3, .serif { font-family: 'Playfair Display', serif; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .card-anim { transition: transform 0.4s ease, box-shadow 0.4s ease; border: 1px solid transparent; }
+        .card-anim:hover { transform: translateY(-10px); border-color: #E7E5E4; background: white; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.05); }
+        input:focus { border-color: #6B705C; outline: none; }
+        .modal-animate { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .active-tab { border-bottom: 2px solid var(--accent); color: var(--text-main) !important; }
+        .step-num { -webkit-text-stroke: 1px #6B705C; color: transparent; opacity: 0.1; font-size: 6rem; font-weight: 900; }
+        .star-filled { color: var(--accent); }
+        .star-empty { color: #E7E5E4; }
+        .maps-btn { background: var(--text-main); color: white; transition: all 0.3s ease; }
+        .maps-btn:hover { background: var(--accent); transform: scale(1.05); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Top Navigation -->
+    <nav class="px-4 py-4 sm:px-6 md:p-8 flex flex-wrap md:flex-nowrap justify-between items-center gap-y-3 border-b border-stone-100 sticky top-0 bg-white/90 glass z-40">
+        <div class="text-xl sm:text-2xl font-bold tracking-tighter uppercase serif">The Journal</div>
+        <div class="order-3 md:order-none w-full md:w-auto flex space-x-6 md:space-x-8 overflow-x-auto no-scrollbar text-[11px] sm:text-xs font-semibold tracking-widest uppercase text-stone-400">
+            <button id="tab-recipes" onclick="switchView('recipes')" class="hover:text-stone-900 transition active-tab whitespace-nowrap py-1">Master Recipes</button>
+            <button id="tab-spots" onclick="switchView('spots')" class="hover:text-stone-900 transition whitespace-nowrap py-1">Travel Log</button>
+            <button id="tab-community" onclick="switchView('community')" class="hover:text-stone-900 transition whitespace-nowrap py-1">Community</button>
+        </div>
+        <div id="authArea" class="flex items-center space-x-3 sm:space-x-4 text-[10px] sm:text-xs font-semibold tracking-widest uppercase text-stone-400"></div>
+    </nav>
+
+    <!-- Header -->
+    <header class="max-w-4xl mx-auto pt-14 sm:pt-20 md:pt-24 pb-12 px-4 sm:px-6 text-center">
+        <h1 id="mainTitle" class="text-4xl sm:text-6xl md:text-8xl mb-6 tracking-tighter">71 Master Recipes</h1>
+        <p id="mainSubtitle" class="text-base sm:text-xl text-stone-500 font-light mb-12 italic">Technique-driven culinary archive.</p>
+        
+        <!-- Adaptive Filter Bar -->
+        <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 mb-12 text-[10px] uppercase tracking-[0.3em] font-bold text-stone-400">
+            <div id="recipeFilters" class="flex flex-wrap justify-center gap-x-4 gap-y-2">
+                <button onclick="filterItems('all')" class="hover:text-stone-900">All</button>
+                <span>/</span>
+                <button onclick="filterItems('Breakfast')" class="hover:text-stone-900">Morning</button>
+                <span>/</span>
+                <button onclick="filterItems('Main')" class="hover:text-stone-900">Mains</button>
+                <span>/</span>
+                <button onclick="filterItems('Dessert')" class="hover:text-stone-900">Sweets</button>
+            </div>
+            <div id="spotFilters" class="hidden flex flex-wrap justify-center gap-x-4 gap-y-2">
+                <button onclick="filterItems('all')" class="hover:text-stone-900">All Spots</button>
+                <span>/</span>
+                <button onclick="filterItems('Exclusive')" class="hover:text-stone-900">Exclusive</button>
+                <span>/</span>
+                <button onclick="filterItems('Burger')" class="hover:text-stone-900">Burgers</button>
+                <span>/</span>
+                <button onclick="filterItems('Busted')" class="hover:text-stone-900">Review Busters</button>
+            </div>
+            <div id="communityFilters" class="hidden flex flex-wrap justify-center gap-x-4 gap-y-2">
+                <button id="cf-all" onclick="resetCommunityFilters()" class="hover:text-stone-900">All</button>
+                <span>/</span>
+                <button id="cf-mine" onclick="toggleCommunityMine()" class="hidden hover:text-stone-900">My Recipes</button>
+                <span id="cf-mine-slash" class="hidden">/</span>
+                <button id="cf-cat-Breakfast" onclick="toggleCommunityCategory('Breakfast')" class="hover:text-stone-900">Breakfast</button>
+                <span>/</span>
+                <button id="cf-cat-Main" onclick="toggleCommunityCategory('Main')" class="hover:text-stone-900">Main</button>
+                <span>/</span>
+                <button id="cf-cat-Dessert" onclick="toggleCommunityCategory('Dessert')" class="hover:text-stone-900">Dessert</button>
+                <span>/</span>
+                <button id="cf-diff-Easy" onclick="toggleCommunityDifficulty('Easy')" class="hover:text-stone-900">Easy</button>
+                <span>/</span>
+                <button id="cf-diff-Medium" onclick="toggleCommunityDifficulty('Medium')" class="hover:text-stone-900">Medium</button>
+                <span>/</span>
+                <button id="cf-diff-Hard" onclick="toggleCommunityDifficulty('Hard')" class="hover:text-stone-900">Hard</button>
+            </div>
+        </div>
+
+        <div id="shareBtnWrap" class="hidden mb-4">
+            <button onclick="openShareModal()" class="maps-btn text-[10px] font-bold uppercase tracking-widest px-6 py-3.5 sm:px-8 sm:py-4 rounded-full">+ Share a Recipe</button>
+        </div>
+
+        <div class="relative max-w-xl mx-auto border-b border-stone-200">
+            <input type="text" id="searchInput" onkeyup="search()" placeholder="Search archives..." 
+                   class="w-full py-4 px-2 text-base sm:text-xl bg-transparent transition duration-500 text-center font-light italic">
+        </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <div id="mainGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 md:gap-x-12 gap-y-12 md:gap-y-20"></div>
+    </main>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="min-h-screen glass flex items-center justify-center p-2 sm:p-4">
+            <div class="bg-white max-w-6xl w-full shadow-2xl rounded-3xl overflow-hidden relative modal-animate">
+                <button onclick="closeModal()" class="absolute top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 text-stone-300 hover:text-stone-900 text-3xl sm:text-4xl md:text-5xl font-light z-50">&times;</button>
+                <div id="modalContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal (Log In / Sign Up) -->
+    <div id="authModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="min-h-screen glass flex items-center justify-center p-2 sm:p-4">
+            <div class="bg-white max-w-md w-full shadow-2xl rounded-3xl overflow-hidden relative modal-animate p-6 sm:p-8 md:p-10">
+                <button onclick="closeAuthModal()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-stone-300 hover:text-stone-900 text-2xl sm:text-3xl font-light">&times;</button>
+                <h2 id="authModalTitle" class="serif text-3xl sm:text-4xl mb-2">Log In</h2>
+                <p id="authModalSubtitle" class="text-stone-400 text-sm font-light mb-8">Log in to share your own recipes.</p>
+
+                <div id="authError" class="hidden bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3 mb-6"></div>
+
+                <form id="loginForm" onsubmit="submitLogin(event)" class="space-y-4">
+                    <input type="text" id="loginUsername" placeholder="Username or email" required autocomplete="off"
+                           class="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm bg-transparent">
+                    <input type="password" id="loginPassword" placeholder="Password" required autocomplete="off"
+                           class="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm bg-transparent">
+                    <label class="flex items-center space-x-2 text-xs text-stone-500 cursor-pointer select-none">
+                        <input type="checkbox" id="rememberMe" class="rounded border-stone-300 text-stone-900 focus:ring-0 focus:ring-offset-0">
+                        <span>Remember me</span>
+                    </label>
+                    <button type="submit" class="maps-btn w-full text-[10px] font-bold uppercase tracking-widest px-8 py-4 rounded-full">Log In</button>
+                </form>
+
+                <form id="registerForm" onsubmit="submitRegister(event)" class="hidden space-y-4">
+                    <input type="text" id="registerUsername" placeholder="Username (3-20 chars, letters/numbers/_)" required autocomplete="username"
+                           class="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm bg-transparent">
+                    <input type="email" id="registerEmail" placeholder="Email" required autocomplete="email"
+                           class="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm bg-transparent">
+                    <input type="password" id="registerPassword" placeholder="Password (min 8 characters)" required autocomplete="new-password"
+                           class="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm bg-transparent">
+                    <button type="submit" class="maps-btn w-full text-[10px] font-bold uppercase tracking-widest px-8 py-4 rounded-full">Create Account</button>
+                </form>
+
+                <p class="text-center text-xs text-stone-400 mt-6">
+                    <span id="authToggleLoginText">Don't have an account?
+                        <button onclick="toggleAuthMode('register')" class="text-stone-900 font-semibold underline">Sign up</button>
+                    </span>
+                    <span id="authToggleRegisterText" class="hidden">Already have an account?
+                        <button onclick="toggleAuthMode('login')" class="text-stone-900 font-semibold underline">Log in</button>
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Recipe Modal -->
+    <div id="shareModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="min-h-screen glass flex items-center justify-center p-2 sm:p-4">
+            <div class="bg-white max-w-2xl w-full shadow-2xl rounded-3xl overflow-hidden relative modal-animate p-6 sm:p-8 md:p-10">
+                <button onclick="closeShareModal()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-stone-300 hover:text-stone-900 text-2xl sm:text-3xl font-light">&times;</button>
+                <h2 id="shareModalTitle" class="serif text-3xl sm:text-4xl mb-2">Share a Recipe</h2>
+                <p class="text-stone-400 text-sm font-light mb-8"><span id="shareModalSubtitle">Posting as</span> <span id="shareAsUser" class="font-semibold text-stone-700"></span></p>
+
+                <div id="shareError" class="hidden bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3 mb-6"></div>
+
+                <form id="shareForm" onsubmit="submitRecipe(event)" class="space-y-5 max-h-[60vh] overflow-y-auto pr-2">
+                    <input type="text" id="shareTitle" placeholder="Recipe title" required
+                           class="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm bg-transparent">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <select id="shareCategory" class="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm bg-transparent">
+                            <option value="Breakfast">Breakfast</option>
+                            <option value="Main">Main</option>
+                            <option value="Dessert">Dessert</option>
+                        </select>
+                        <select id="shareDifficulty" class="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm bg-transparent">
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                        </select>
+                    </div>
+
+                    <textarea id="shareIntro" placeholder="A short intro / description" rows="2"
+                              class="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm bg-transparent"></textarea>
+
+                    <div>
+                        <h4 class="text-[10px] uppercase font-bold tracking-widest text-stone-400 mb-3">Ingredients</h4>
+                        <div id="shareIngredients" class="space-y-2"></div>
+                        <button type="button" onclick="addIngredientField()" class="text-xs text-stone-500 underline mt-2">+ Add ingredient</button>
+                    </div>
+
+                    <div>
+                        <h4 class="text-[10px] uppercase font-bold tracking-widest text-stone-400 mb-3">Steps</h4>
+                        <div id="shareSteps" class="space-y-2"></div>
+                        <button type="button" onclick="addStepField()" class="text-xs text-stone-500 underline mt-2">+ Add step</button>
+                    </div>
+
+                    <textarea id="shareSecret" placeholder="Secret technique (optional)" rows="2"
+                              class="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm bg-transparent"></textarea>
+
+                    <button id="shareSubmitBtn" type="submit" class="maps-btn w-full text-[10px] font-bold uppercase tracking-widest px-8 py-4 rounded-full">Publish Recipe</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="min-h-screen glass flex items-center justify-center p-2 sm:p-4">
+            <div class="bg-white max-w-md w-full shadow-2xl rounded-3xl overflow-hidden relative modal-animate p-6 sm:p-8 md:p-10 max-h-[90vh] overflow-y-auto">
+                <button onclick="closeSettingsModal()" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-stone-300 hover:text-stone-900 text-2xl sm:text-3xl font-light">&times;</button>
+                <h2 class="serif text-3xl sm:text-4xl mb-2">Account Settings</h2>
+                <p class="text-stone-400 text-sm font-light mb-8">Update your account information.</p>
+
+                <h4 class="text-[10px] uppercase font-bold tracking-widest text-stone-400 mb-3">Profile Picture</h4>
+                <div id="avatarError" class="hidden bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3 mb-4"></div>
+                <div class="flex items-center space-x-5 mb-10">
+                    <div id="avatarPreviewWrap" class="w-20 h-20 shrink-0"></div>
+                    <div class="space-y-2">
+                        <input type="file" id="avatarInput" accept="image/png,image/jpeg,image/webp,image/gif" onchange="handleAvatarSelect(event)" class="hidden">
+                        <button type="button" onclick="document.getElementById('avatarInput').click()" class="block text-xs font-semibold text-stone-700 underline">Choose Photo</button>
+                        <button type="button" id="removeAvatarBtn" onclick="removeAvatar()" class="hidden block text-xs font-semibold text-red-600 underline">Remove Photo</button>
+                    </div>
+                </div>
+
+                <h4 class="text-[10px] uppercase font-bold tracking-widest text-stone-400 mb-3">Profile</h4>
+                <div id="profileError" class="hidden bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3 mb-4"></div>
+                <form id="profileForm" onsubmit="submitProfileUpdate(event)" class="space-y-4 mb-10">
+                    <input type="text" id="settingsUsername" placeholder="Username" required
+                           class="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm bg-transparent">
+                    <input type="email" id="settingsEmail" placeholder="Email" required
+                           class="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm bg-transparent">
+                    <button type="submit" class="maps-btn w-full text-[10px] font-bold uppercase tracking-widest px-8 py-4 rounded-full">Save Profile</button>
+                </form>
+
+                <h4 class="text-[10px] uppercase font-bold tracking-widest text-stone-400 mb-3">Change Password</h4>
+                <div id="passwordError" class="hidden bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3 mb-4"></div>
+                <form id="passwordForm" onsubmit="submitPasswordChange(event)" class="space-y-4 mb-10">
+                    <input type="password" id="settingsCurrentPassword" placeholder="Current password" required
+                           class="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm bg-transparent">
+                    <input type="password" id="settingsNewPassword" placeholder="New password (min 8 characters)" required
+                           class="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm bg-transparent">
+                    <input type="password" id="settingsNewPasswordConfirm" placeholder="Confirm new password" required
+                           class="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm bg-transparent">
+                    <button type="submit" class="maps-btn w-full text-[10px] font-bold uppercase tracking-widest px-8 py-4 rounded-full">Change Password</button>
+                </form>
+
+                <h4 class="text-[10px] uppercase font-bold tracking-widest text-red-400 mb-3">Danger Zone</h4>
+                <p class="text-stone-400 text-xs font-light mb-4">Permanently delete your account and every recipe you've shared. This cannot be undone.</p>
+                <button type="button" onclick="confirmDeleteAccount()" class="w-full border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white text-[10px] font-bold uppercase tracking-widest px-8 py-4 rounded-full transition">Delete Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal (used for logout, delete account, delete recipe) -->
+    <div id="confirmModal" class="fixed inset-0 z-[70] hidden overflow-y-auto">
+        <div class="min-h-screen glass flex items-center justify-center p-2 sm:p-4">
+            <div class="bg-white max-w-sm w-full shadow-2xl rounded-3xl overflow-hidden relative modal-animate p-6 sm:p-8 md:p-10 text-center">
+                <h3 id="confirmTitle" class="serif text-2xl sm:text-3xl mb-3">Are you sure?</h3>
+                <p id="confirmMessage" class="text-stone-500 text-sm font-light mb-8"></p>
+                <div class="flex space-x-3">
+                    <button onclick="closeConfirmModal()" class="flex-1 border border-stone-200 text-stone-600 hover:bg-stone-50 text-[10px] font-bold uppercase tracking-widest px-4 sm:px-6 py-4 rounded-full transition">Cancel</button>
+                    <button id="confirmActionBtn" class="flex-1 text-[10px] font-bold uppercase tracking-widest px-4 sm:px-6 py-4 rounded-full text-white transition">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 max-w-[90vw] text-center bg-stone-900 text-white text-sm px-6 py-4 rounded-full shadow-2xl z-[60] hidden"></div>
+
+    <footer class="py-20 text-center border-t border-stone-100 mt-20">
+        <p class="serif italic text-2xl text-stone-300 uppercase tracking-widest">Fin.</p>
+    </footer>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
